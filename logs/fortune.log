@@ -1,0 +1,12 @@
+2025-02-09 23:46:21,103 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-02-09 23:46:21,104 [INFO] [33mPress CTRL+C to quit[0m
+2025-02-09 23:46:21,104 [INFO]  * Restarting with stat
+2025-02-09 23:46:21,299 [WARNING]  * Debugger is active!
+2025-02-09 23:46:21,303 [INFO]  * Debugger PIN: 719-551-557
+2025-02-09 23:46:22,976 [INFO] 127.0.0.1 - - [09/Feb/2025 23:46:22] "[35m[1mGET / HTTP/1.1[0m" 500 -
+2025-02-09 23:46:23,018 [INFO] 127.0.0.1 - - [09/Feb/2025 23:46:23] "GET /?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 -
+2025-02-09 23:46:23,018 [INFO] 127.0.0.1 - - [09/Feb/2025 23:46:23] "GET /?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 -
+2025-02-09 23:46:23,023 [INFO] 127.0.0.1 - - [09/Feb/2025 23:46:23] "GET /?__debugger__=yes&cmd=resource&f=console.png&s=GGExYXhgM7MmfbjKnFsv HTTP/1.1" 200 -
+2025-02-09 23:47:34,213 [INFO]  * Detected change in '/Users/wangyaomin/Downloads/bagua/ai_client.py', reloading
+2025-02-09 23:47:34,253 [INFO]  * Restarting with stat

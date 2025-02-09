@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI算命系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- 添加 Markdown 样式 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
+    <!-- 添加代码高亮样式 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
+    <!-- 添加 KaTeX 样式支持数学公式 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <style>
+        body {
+            background: #f0f2f5;
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            color: #2c3e50;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            color: #1a1a1a;
+            font-size: 2.5em;
+            margin-bottom: 0.5em;
+            font-weight: 600;
+            background: linear-gradient(120deg, #2c3e50, #3498db);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+        }
+
+        .disclaimer {
+            text-align: center;
+            color: #ff6b6b;
+            font-size: 1em;
+            margin-bottom: 1.5em;
+            font-style: italic;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 2em;
+            font-weight: 300;
+        }
+
+        .form-group {
+            margin-bottom: 2em;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.8em;
+            color: #34495e;
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+
+        .form-group .input-hint {
+            display: block;
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 0.5em;
+            font-style: italic;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e6ed;
+            border-radius: 12px;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+            background: #f8fafc;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+            background: #fff;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(120deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .status-container {
+            display: none;
+            text-align: center;
+            margin: 2em 0;
+            padding: 2em;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 20px;
+            z-index: 100;
+        }
+
+        .gua-animation {
+            display: inline-block;
+            margin: 10px auto;
+            font-size: 2em;
+            animation: rotateGua 2s infinite linear;
+        }
+
+        @keyframes rotateGua {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes typing {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .typing-effect {
+            animation: typing 0.5s ease-out;
+        }
+
+        .status-text {
+            font-size: 1.3em;
+            color: #2c3e50;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .calculating {
+            background: linear-gradient(270deg, #3498db, #2980b9, #2c3e50);
+            background-size: 600% 600%;
+            animation: gradientShift 3s ease infinite, blink 1.5s infinite;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .result-container {
+            display: none;
+            margin-top: 2em;
+            padding: 0;
+            background: transparent;
+            max-height: 70vh;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        /* 添加滚动条样式 */
+        .result-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .result-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .result-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        .result-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        .result-container h2 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-bottom: 1em;
+            font-weight: 600;
+        }
+
+        /* 优化 Markdown 样式 */
+        .markdown-body {
+            background: #ffffff;
+            color: #24292e;
+            padding: 2em;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            font-size: 16px;
+            line-height: 1.8;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .markdown-body h1,
+        .markdown-body h2,
+        .markdown-body h3,
+        .markdown-body h4,
+        .markdown-body h5,
+        .markdown-body h6 {
+            color: #1a73e8;
+            margin-top: 24px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            line-height: 1.25;
+        }
+
+        .markdown-body h2 {
+            padding-bottom: 0.3em;
+            border-bottom: 2px solid #1a73e8;
+            font-size: 1.8em;
+        }
+
+        .markdown-body p {
+            margin: 1em 0;
+            line-height: 1.9;
+            color: #24292e;
+            font-size: 1.1em;
+        }
+
+        .markdown-body code {
+            background-color: #f6f8fa;
+            color: #d32f2f;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 0.9em;
+        }
+
+        .markdown-body strong {
+            font-weight: 600;
+            color: #24292e;
+        }
+
+        .markdown-body em {
+            color: #5f6368;
+        }
+
+        .markdown-body ul,
+        .markdown-body ol {
+            padding-left: 2em;
+            margin: 1em 0;
+            color: #24292e;
+        }
+
+        .markdown-body li {
+            margin: 0.5em 0;
+            line-height: 1.8;
+        }
+
+        .markdown-body blockquote {
+            margin: 1.5em 0;
+            padding: 1em 1.5em;
+            border-left: 4px solid #1a73e8;
+            background: #f8f9fa;
+            border-radius: 0 8px 8px 0;
+            color: #24292e;
+        }
+
+        .markdown-body blockquote p {
+            margin: 0;
+        }
+
+        .markdown-body pre {
+            margin: 1.5em 0;
+            padding: 1em;
+            background: #f6f8fa;
+            border-radius: 8px;
+            overflow-x: auto;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: transparent;
+            color: #24292e;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        .markdown-body hr {
+            height: 2px;
+            background: #e1e4e8;
+            border: none;
+            margin: 2em 0;
+        }
+
+        .markdown-body img {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin: 1em 0;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 1.5em 0;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .markdown-body th {
+            background: linear-gradient(120deg, #3498db, #2980b9);
+            color: white;
+            font-weight: 500;
+            padding: 1em;
+            text-align: left;
+        }
+
+        .markdown-body td {
+            padding: 1em;
+            border-top: 1px solid #edf2f7;
+            background: white;
+        }
+
+        .markdown-body tr:hover td {
+            background: #f8fafc;
+        }
+
+        .markdown-body a {
+            color: #3498db;
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .markdown-body a:hover {
+            color: #2980b9;
+            border-bottom-color: currentColor;
+        }
+
+        /* 代码高亮主题优化 */
+        .hljs {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 1em;
+            border-radius: 8px;
+        }
+
+        .hljs-keyword {
+            color: #c678dd;
+        }
+
+        .hljs-string {
+            color: #98c379;
+        }
+
+        .hljs-number {
+            color: #d19a66;
+        }
+
+        .hljs-function {
+            color: #61afef;
+        }
+
+        .hljs-comment {
+            color: #5c6370;
+            font-style: italic;
+        }
+
+        /* 八字表格样式 */
+        .bazi-table {
+            width: 100%;
+            max-width: 800px;
+            margin: 2em auto !important;
+            border-collapse: collapse;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            background: white;
+        }
+
+        .bazi-table th {
+            background: #2c3e50;
+            color: white;
+            padding: 1em;
+            font-size: 1.1em;
+            font-weight: 500;
+            text-align: center;
+            border: none;
+        }
+
+        .bazi-table td {
+            padding: 1em;
+            text-align: center;
+            border: 1px solid #edf2f7;
+            color: #2c3e50;
+            font-size: 1.1em;
+            background: white;
+        }
+
+        .bazi-table tr:nth-child(even) td {
+            background: #f8fafc;
+        }
+
+        .bazi-table tr:hover td {
+            background: #f1f5f9;
+        }
+
+        /* 标题样式 */
+        .markdown-body h2 {
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin: 1.5em 0 1em;
+            padding-bottom: 0.3em;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .markdown-body h3 {
+            color: #34495e;
+            font-size: 1.5em;
+            margin: 1.2em 0 0.8em;
+        }
+
+        /* 段落样式 */
+        .markdown-body p {
+            margin: 1em 0;
+            line-height: 1.8;
+            color: #2c3e50;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .markdown-body {
+                padding: 1.5em;
+                font-size: 15px;
+            }
+
+            .markdown-body h1 { font-size: 1.8em; }
+            .markdown-body h2 { font-size: 1.6em; }
+            .markdown-body h3 { font-size: 1.4em; }
+            
+            .bazi-table th,
+            .bazi-table td {
+                padding: 0.8em;
+                font-size: 0.95em;
+            }
+        }
+
+        /* 添加新的样式 */
+        .table-container {
+            margin: 2em 0;
+            overflow-x: auto;
+        }
+
+        .bazi-table {
+            width: 100%;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            border-collapse: collapse;
+            margin: 0 auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .bazi-table th,
+        .bazi-table td {
+            padding: 1em;
+            text-align: center;
+            border: 1px solid #e1e4e8;
+        }
+
+        .bazi-table th {
+            background: #1a73e8;
+            color: white;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 1em;
+        }
+
+        .bazi-table td {
+            background: #ffffff;
+            color: #24292e;
+            font-size: 1em;
+        }
+
+        .bazi-table tr:hover td {
+            background: #f8f9fa;
+        }
+
+        .section-title {
+            color: #3498db;
+            font-size: 1.5em;
+            margin: 1.5em 0 1em;
+            padding-bottom: 0.3em;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .markdown-heading {
+            color: #2c3e50;
+            margin: 1.5em 0 1em;
+            font-weight: 600;
+        }
+
+        .markdown-body {
+            background: #ffffff;
+            color: #24292e;
+            padding: 2em;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .markdown-body p {
+            color: #24292e;
+            line-height: 1.8;
+            margin: 1em 0;
+        }
+
+        .markdown-body h2 {
+            color: #1a73e8;
+            font-size: 1.8em;
+            margin: 1.5em 0 1em;
+            padding-bottom: 0.3em;
+            border-bottom: 2px solid #1a73e8;
+        }
+
+        .markdown-body h3 {
+            color: #3498db;
+            font-size: 1.5em;
+            margin: 1.2em 0 0.8em;
+        }
+
+        /* 滚动条美化 */
+        .markdown-body::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .markdown-body::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .markdown-body::-webkit-scrollbar-thumb {
+            background: #1a73e8;
+            border-radius: 4px;
+        }
+
+        .markdown-body::-webkit-scrollbar-thumb:hover {
+            background: #1557b0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI算命系统</h1>
+        <p class="disclaimer">本系统仅供娱乐，请勿用于实际决策</p>
+        <p class="subtitle">探索命理，洞察人生</p>
+        
+        <form id="fortuneForm" onsubmit="submitForm(event)">
+            <div class="form-group">
+                <label for="user_input">请输入您的农历生日</label>
+                <input type="text" id="user_input" name="user_input" required 
+                       placeholder="示例：1990年5月1日子时 北京市"
+                       style="width: 100%; padding: 15px;">
+            </div>
+
+            <button type="submit" class="submit-btn">开始测算</button>
+        </form>
+
+        <div id="status" class="status-container">
+            <div class="gua-animation">☯</div>
+            <div class="status-text calculating">正在推算命理...</div>
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="result" class="result-container">
+            <h2>测算结果</h2>
+            <div id="result-content" class="markdown-body"></div>
+        </div>
+    </div>
+
+    <!-- 添加 Markdown 相关库 -->
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it@13.0.1/dist/markdown-it.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it-emoji@2.0.2/dist/markdown-it-emoji.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it-mark@3.0.1/dist/markdown-it-mark.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it-footnote@3.0.3/dist/markdown-it-footnote.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it-sub@1.0.0/dist/markdown-it-sub.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it-sup@1.0.0/dist/markdown-it-sup.min.js"></script>
+    <!-- 添加代码高亮库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <!-- 添加 KaTeX 支持 -->
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it-texmath@1.0.0/texmath.min.js"></script>
+
+    <script>
+        // 配置 markdown-it
+        const md = window.markdownit({
+            html: true,
+            linkify: true,
+            typographer: true,
+            highlight: function (str, lang) {
+                if (lang && hljs.getLanguage(lang)) {
+                    try {
+                        return hljs.highlight(str, { language: lang }).value;
+                    } catch (__) {}
+                }
+                return ''; // 使用默认的转义
+            }
+        })
+        .use(window.markdownitEmoji)
+        .use(window.markdownitMark)
+        .use(window.markdownitFootnote)
+        .use(window.markdownitSub)
+        .use(window.markdownitSup)
+        .use(window.texmath, {
+            engine: katex,
+            delimiters: ['dollars', 'brace'],
+            katexOptions: { macros: { "\\RR": "\\mathbb{R}" } }
+        });
+
+        // 自定义表格渲染
+        md.renderer.rules.table_open = function() {
+            return '<div class="table-container"><table class="bazi-table">';
+        };
+        md.renderer.rules.table_close = function() {
+            return '</table></div>';
+        };
+
+        let currentContent = '';
+        let lastScrollHeight = 0;
+
+        // 修改自动滚动函数
+        function autoScroll() {
+            const resultContent = document.getElementById('result-content');
+            if (!resultContent) return;
+
+            const isScrolledToBottom = resultContent.scrollHeight - resultContent.clientHeight <= resultContent.scrollTop + 50;
+            
+            if (isScrolledToBottom) {
+                resultContent.scrollTop = resultContent.scrollHeight;
+            }
+        }
+
+        // 添加防抖函数
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // 防抖处理的滚动函数
+        const debouncedScroll = debounce(autoScroll, 50);
+
+        // 更新状态文本的动画
+        function updateStatusText(text) {
+            const statusText = document.querySelector('.status-text');
+            statusText.textContent = text;
+            statusText.classList.remove('typing-effect');
+            void statusText.offsetWidth; // 触发重绘
+            statusText.classList.add('typing-effect');
+        }
+
+        async function submitForm(event) {
+            event.preventDefault();
+            
+            const form = document.getElementById('fortuneForm');
+            const status = document.getElementById('status');
+            const error = document.getElementById('error');
+            const result = document.getElementById('result');
+            const resultContent = document.getElementById('result-content');
+            const userInput = document.getElementById('user_input').value;
+            
+            error.style.display = 'none';
+            result.style.display = 'block';
+            resultContent.innerHTML = '';
+            currentContent = '';
+            status.style.display = 'block';
+            
+            const guaSymbols = ['☰', '☱', '☲', '☳', '☴', '☵', '☶', '☷'];
+            let guaIndex = 0;
+            const guaElement = document.querySelector('.gua-animation');
+            const guaInterval = setInterval(() => {
+                guaElement.textContent = guaSymbols[guaIndex];
+                guaIndex = (guaIndex + 1) % guaSymbols.length;
+            }, 500);
+            
+            try {
+                const response = await fetch('/calculate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `user_input=${encodeURIComponent(userInput)}`
+                });
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                
+                while (true) {
+                    const {value, done} = await reader.read();
+                    if (done) break;
+                    
+                    const text = decoder.decode(value);
+                    const lines = text.split('\n');
+                    
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = JSON.parse(line.slice(6));
+                            
+                            if (data.type === 'status') {
+                                updateStatusText(data.content);
+                            }
+                            else if (data.type === 'content') {
+                                currentContent += data.content;
+                                
+                                // 使用 markdown-it 渲染内容
+                                resultContent.innerHTML = md.render(currentContent);
+                                
+                                // 使用防抖的滚动函数
+                                debouncedScroll();
+                            }
+                            else if (data.type === 'error') {
+                                clearInterval(guaInterval);
+                                error.style.display = 'block';
+                                error.textContent = data.content;
+                                status.style.display = 'none';
+                            }
+                            else if (data.type === 'done') {
+                                clearInterval(guaInterval);
+                                status.style.display = 'none';
+                            }
+                        }
+                    }
+                }
+            } catch (err) {
+                clearInterval(guaInterval);
+                error.style.display = 'block';
+                error.textContent = '系统出现错误，请稍后重试';
+                status.style.display = 'none';
+            }
+        }
+
+        // 监听滚动事件
+        document.getElementById('result-content').addEventListener('scroll', () => {
+            const resultContent = document.getElementById('result-content');
+            const isScrolledToBottom = resultContent.scrollHeight - resultContent.clientHeight <= resultContent.scrollTop + 50;
+            
+            if (isScrolledToBottom) {
+                resultContent.dataset.autoScroll = 'true';
+            } else {
+                resultContent.dataset.autoScroll = 'false';
+            }
+        });
+    </script>
+</body>
+</html> 
