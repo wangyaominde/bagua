@@ -49,7 +49,7 @@ pip install -r requirements.txt
 python app.py
 ```
 
-2. 打开浏览器访问：`http://localhost:5000`
+2. 打开浏览器访问：`http://localhost:9999`
 
 3. 在页面上输入以下信息：
    - 姓名

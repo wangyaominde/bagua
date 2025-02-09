@@ -126,4 +126,4 @@ if __name__ == '__main__':
         logger.error("错误：无法加载配置文件，请确保 config.json 文件存在且格式正确")
     else:
         logger.info("服务启动成功")
-        app.run(debug=True) 
+        app.run(host='0.0.0.0', port=9999, debug=True) 
